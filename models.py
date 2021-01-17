@@ -1,8 +1,8 @@
 import csv
 from dataclasses import dataclass
 import datetime
-from sqlalchemy import Column, ForeignKey, Integer, String, Boolean
-from sqlalchemy import Table, MetaData, Date, DateTime, Float
+from sqlalchemy import Column, Integer, String
+from sqlalchemy import DateTime, Float
 from database import create_db, create_tables, setup_mysql_engine_default
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -15,18 +15,22 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'users'
 
+    # Serialize object to JSON
     id: int
     username: str
     password: str
 
+    # Database properties
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(250), unique=True, nullable=False)
     password = Column(String(250), nullable=False)
 
 
+@dataclass
 class EnergyData(Base):
     __tablename__ = 'energy_data'
 
+    # Serialize object to JSON
     id: int
     date: str
     energy: float
@@ -38,6 +42,7 @@ class EnergyData(Base):
     intensity: float
     power_factor: float
 
+    # Database properties
     id = Column(Integer, primary_key=True, index=True)
     date = Column(DateTime, nullable=False)
     energy = Column(Float)
@@ -51,6 +56,9 @@ class EnergyData(Base):
 
 
 def populate():
+    """
+    Populate the database with the data in csv: ./docs/Monitoring report.csv
+    """
     def check_no_empty(data):
         if data.strip() == '':
             return None
@@ -64,10 +72,6 @@ def populate():
         engine_db = setup_mysql_engine_default()
         session = sessionmaker(bind=engine_db)
         s = session()
-
-        user = User(username='prueba', password='prueba')
-        s.add(user)
-        s.commit()
 
         for row in csv_reader:
             if line == 0:
@@ -85,6 +89,7 @@ def populate():
                     s.commit()
                     print(f'{line} rows inserted')
 
+        print(f'{line} rows inserted')
         s.commit()
         s.close()
         engine_db.dispose()
